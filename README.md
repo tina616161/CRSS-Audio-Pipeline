@@ -13,4 +13,4 @@
 
 ## 
 - `11-03303.mp3` contains audio from apollo 11 mission
-
+- `normalize.py` normalizes and filters white noise
