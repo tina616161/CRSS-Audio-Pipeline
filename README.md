@@ -11,8 +11,13 @@
 - first arg is file name
 - second arg is chunk size in minutes
 
+## Faster Normalization
+- run `make` to build
+- change input file path in `normalize.c` (change this later to accept cli arguments)
+- `./normalize`
+  - output file is called `normalized-11-hours.wav` (change this later too)
+
 ## 
 - `11-03303.mp3` contains audio from apollo 11 mission
 - `normalize.py` normalizes and downsamples audio
 - `speech_to_text.py` finds hotspots, saves hotspots as wavefile, and converts recognized speech in the hotspots to text
-  - also uses a lowpass filter to make audio a little clearer, makes speech to text easier
