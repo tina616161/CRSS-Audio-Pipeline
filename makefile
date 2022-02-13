@@ -1,5 +1,4 @@
-clean:
-		rm chunk normalize
+all: norm chunk
 norm:
 		gcc -o normalize normalize.c -lsndfile -Wall
 

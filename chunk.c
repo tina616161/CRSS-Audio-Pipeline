@@ -11,6 +11,10 @@ main(int argc, char** argv){
 		exit(1);
 	}
 
+	const char* dir_name = "./A11_chunks";
+	const char* orig_file_name = "A11_T863_HR1U_CH01";
+	const char* mission_start = "324-12-15-58";
+	const char* mission_end = "325-11-58-00";
 	const char* file_in_path = argv[1];
 
 	SNDFILE* file;
@@ -26,25 +30,32 @@ main(int argc, char** argv){
 		exit(-1);
 	}
 
-	unsigned long window = info.samplerate * 60 * 30; // number of samples in 30 minutes of audio
+	unsigned long window = info.samplerate * 60 * 30; 
 	unsigned long ind = 0;
-	unsigned long ind2;
 	short* buffer = malloc(sizeof(short) * window);
+	int num_original_samples = info.frames;
 	info.frames = (int) window;
+	int count = 0;
+	int done = 0;
 
-	while(1){
-		char out_file_name[200];
-		out_file_name = "./chunks/chunk";
+	while(done){
+		char out_file_name[250];
+		sprintf(out_file_name, "%s/%s_%s_%s-%d.wav", dir_name, orig_file_name, mission_start, mission_end, count);
 
-		strcat(out_file_name, "1.wav");
-		break;
+		if(ind + window > num_original_samples){
+			window = num_original_samples - ind;
+			info.frames = num_original_samples - ind;
+			done = 1;
+		}
 
-		/* memcpy(buffer, data + ind, window * sizeof(short)); */
-		/* SNDFILE* outfile = sf_open("./chunk1.wav", SFM_WRITE, &info); */
-		/* sf_write_short(outfile, buffer, window); */
-		/* sf_write_sync(outfile); */
-		/* sf_close(outfile); */
-		/* break; */
+		memcpy(buffer, data + ind, window * sizeof(short));
+
+		SNDFILE* outfile = sf_open(out_file_name, SFM_WRITE, &info);
+		sf_write_short(outfile, buffer, window);
+		sf_write_sync(outfile);
+		sf_close(outfile);
+
+		ind += window;
 	}
 	sf_close(file);
 }
