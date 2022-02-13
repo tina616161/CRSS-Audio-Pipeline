@@ -19,6 +19,33 @@ peak_normalize(short* data, int arr_size, short max){
 	return (WaveData) {out, arr_size};
 }
 
+WaveData
+downsample(double* data, int arr_size, int original_sample_rate, int new_sample_rate){
+	unsigned long long new_size;
+	double ratio, ind;
+	double* out;
+	int count;
+	
+	new_size = (unsigned long long)arr_size * (unsigned long long)new_sample_rate / (unsigned long long)original_sample_rate;
+	ratio = original_sample_rate / new_sample_rate;
+	count = 0;
+	ind = 0;
+
+	out = malloc(sizeof(double) * new_size);
+
+	while(ind < arr_size){
+		if(!(ind == (int)ind))
+			out[count] = (data[(int)ind] + data[(int)ind + 1]) / 2;
+		else
+			out[count] = data[(int)ind];
+
+		ind += ratio;
+		count++;
+	}
+
+	return (WaveData) {out, new_size};
+}
+
 int
 main(int argc, char** argv){
 	if(argc < 3){
@@ -50,20 +77,23 @@ main(int argc, char** argv){
 	}
 
 	// find max
-	for(int i = 0; i < info.frames; i++){
-		if(data[i] > max){
+	for(int i = 0; i < info.frames; i++)
+		if(data[i] > max)
 			max = data[i];
-		}
-	}
 
 	printf("Normalizing...\n");
-	// normalize data
-	WaveData normed = peak_normalize(data, info.frames, max);
+	WaveData output = peak_normalize(data, info.frames, max);
+
+	printf("Downsampling...\n");
+	WaveData output = downsample(output.data, info.frames, info.samplerate, 8000);
+
+	info.samplerate = 8000;
+	info.frames = output.count;
 
 	// output path
 	SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info);
 	// write data to file
-	sf_write_double(outfile, normed.data, normed.count);
+	sf_write_double(outfile, downsampled.data, downsampled.count);
 	sf_write_sync(outfile);
 
 	// close file

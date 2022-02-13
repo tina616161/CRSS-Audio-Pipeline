@@ -4,18 +4,18 @@
 - `python3`
 - `pydub==0.25.1`
 - `SpeechRecognition==3.8.1`
+- `libsndfile`
 - [ffmpeg](https://www.ffmpeg.org/download.html)
 
-## Usage
+## Chunking
 `python3 chunk_.py 11-03303.mp3 10`
 - first arg is file name
 - second arg is chunk size in minutes
 
-## Faster Normalization
+## Normalizing and Downsampling
 - run `make` to build
-- change input file path in `normalize.c` (change this later to accept cli arguments)
-- `./normalize`
-  - output file is called `normalized-11-hours.wav` (change this later too)
+- `./normalize [input file path] [output file path]`
+- normalizes and downsamples wav file
 
 ## 
 - `11-03303.mp3` contains audio from apollo 11 mission
