@@ -20,16 +20,23 @@ peak_normalize(short* data, int arr_size, short max){
 }
 
 int
-main(){
-	char* file_name;
+main(int argc, char** argv){
+	if(argc < 3){
+		printf("ERROR: Not enough arguments\n");
+		printf("Usage: normalize {input file path} {output file path}\n");
+		exit(1);
+	}
+
+	const char* file_in_path = argv[1];
+	const char* file_out_path = argv[2];
+
 	SNDFILE* file;
 	SF_INFO info;
 	short* data;
 	short max;
 
-	file_name = "/mnt/c/Users/sesan/Desktop/CH4.wav";
 	// read input file
-	file = sf_open(file_name, SFM_READ, &info);
+	file = sf_open(file_in_path, SFM_READ, &info);
 
 	// alloc space for array of samples
 	data = malloc(sizeof(short) * info.frames * info.channels);
@@ -53,9 +60,8 @@ main(){
 	// normalize data
 	WaveData normed = peak_normalize(data, info.frames, max);
 
-	// output path 
-	const char* out_path = "./normalized-11-hours.wav";
-	SNDFILE* outfile = sf_open(out_path, SFM_WRITE, &info);
+	// output path
+	SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info);
 	// write data to file
 	sf_write_double(outfile, normed.data, normed.count);
 	sf_write_sync(outfile);
