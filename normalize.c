@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sndfile.h>
-#include <math.h>
 
 typedef struct {
 	double* data;
@@ -50,7 +49,7 @@ int
 main(int argc, char** argv){
 	if(argc < 3){
 		printf("ERROR: Not enough arguments\n");
-		printf("Usage: normalize {input file path} {output file path}\n");
+		printf("Usage: normalize [input file path] [output file path]\n");
 		exit(1);
 	}
 
@@ -85,7 +84,7 @@ main(int argc, char** argv){
 	WaveData output = peak_normalize(data, info.frames, max);
 
 	printf("Downsampling...\n");
-	WaveData output = downsample(output.data, info.frames, info.samplerate, 8000);
+	output = downsample(output.data, info.frames, info.samplerate, 8000);
 
 	info.samplerate = 8000;
 	info.frames = output.count;
@@ -93,7 +92,7 @@ main(int argc, char** argv){
 	// output path
 	SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info);
 	// write data to file
-	sf_write_double(outfile, downsampled.data, downsampled.count);
+	sf_write_double(outfile, output.data, output.count);
 	sf_write_sync(outfile);
 
 	// close file
