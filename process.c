@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include<sys/wait.h>
 
 int
 main(int argc, char** argv){
@@ -19,7 +20,16 @@ main(int argc, char** argv){
 		exit(1);
 	}
 
-	execl("./normalize", "./normalize", argv[1], "./normed_audio.wav", (char*) NULL);
-	execl("./chunk", "./chunk", "./normed_audio.wav", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], (char*) NULL);
+	int n = fork();
+	if(n == 0)
+		execl("./normalize", "./normalize", argv[1], "./normed_audio.wav", (char*) NULL);
+	else
+		wait(NULL);
+
+	n = fork();
+	if(n == 0)
+		execl("./chunk", "./chunk", "./normed_audio.wav", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], (char*) NULL);
+	else
+		wait(NULL);
 	exit(0);
 }
