@@ -38,7 +38,7 @@ main(int argc, char** argv){
 	int count = 0;
 	int done = 0;
 
-	while(done){
+	while(!done){
 		char out_file_name[250];
 		sprintf(out_file_name, "%s/%s_%s_%s-%d.wav", dir_name, orig_file_name, mission_start, mission_end, count);
 
