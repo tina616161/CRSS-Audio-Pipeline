@@ -102,5 +102,5 @@ main(int argc, char** argv){
 	free(data);
 
 	printf("Done\n");
-	exit(0);
+	return 0;
 }

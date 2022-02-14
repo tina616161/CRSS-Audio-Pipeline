@@ -1,28 +1,31 @@
 #include <errno.h> 
 #include <dirent.h> 
-
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <sndfile.h>
-
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 int
 main(int argc, char** argv){
-	if(argc < 2){
+	if(argc < 7){
 		printf("ERROR: Not enough arguments\n");
-		printf("Usage: chunk [input file path]\n");
+		printf("Usage: chunk [input file] [mission] [tape] [historical recorder] [cannel] [mission start] [mission end]\n");
 		exit(1);
 	}
 
-	const char* dir_name = "./A11_chunks";
-	const char* orig_file_name = "A11_T863_HR1U_CH01";
-	const char* mission_start = "324-12-15-58";
-	const char* mission_end = "325-11-58-00";
-	const char* file_in_path = argv[1];
+	char orig_file_name[100];
+	char dir_name[100];
+	const char* mission_start;
+	const char* mission_end;
+	const char* file_in_path;
+
+	sprintf(orig_file_name, "A%s_T%s_HR%s_CH%s", argv[2], argv[3], argv[4], argv[5]);
+	sprintf(dir_name, "./A%s_chunks", argv[2]);
+	mission_start = argv[6];
+	mission_end = argv[7];
+	file_in_path = argv[1];
 
 	// check if directory exists
 	DIR* dir = opendir(dir_name);
