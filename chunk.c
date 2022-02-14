@@ -1,7 +1,14 @@
+#include <errno.h> 
+#include <dirent.h> 
+
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <sndfile.h>
+
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 int
 main(int argc, char** argv){
@@ -17,26 +24,46 @@ main(int argc, char** argv){
 	const char* mission_end = "325-11-58-00";
 	const char* file_in_path = argv[1];
 
+	// check if directory exists
+	DIR* dir = opendir(dir_name);
+	if(dir){
+		// if it exists exit with error
+		printf("ERROR: Directory '%s' already exists\n", dir_name);
+		closedir(dir);
+		exit(1);
+	}
+	// if dir doesn't exist
+	else if(ENOENT == errno){
+		// try creating it 
+		if(mkdir(dir_name, 0777) != 0){ // if there's an error when creating, exit
+			printf("ERROR: Couldn't create directory: %s", dir_name);
+			exit(1);
+		}
+	}
+
 	SNDFILE* file;
 	SF_INFO info;
 	short* data;
 
+	// open file for reading
 	file = sf_open(file_in_path, SFM_READ, &info);
+	// create array for storing data
 	data = malloc(sizeof(short) * info.frames * info.channels);
 
+	// read wave file
 	printf("Reading...\n");
 	if( !sf_readf_short(file, data, info.frames) ){
 		printf("Couldn't read file.");
 		exit(-1);
 	}
 
-	unsigned long window = info.samplerate * 60 * 30; 
-	unsigned long ind = 0;
-	short* buffer = malloc(sizeof(short) * window);
-	int num_original_samples = info.frames;
-	info.frames = (int) window;
-	int count = 0;
-	int done = 0;
+	unsigned long window = info.samplerate * 60 * 30; // this is the number of samples in 30 minutes
+	unsigned long ind = 0; // copy 'window' number of elements starting at this index (so 30 minutes worth of samples) to buffer
+	short* buffer = malloc(sizeof(short) * window); // save buffer to a file
+	int num_original_samples = info.frames; // save total number of samples
+	info.frames = (int) window; // edit info struct since we're writing new data
+	int count = 0; // keeps track of the chunk id
+	int done = 0; // bool to break the loop
 
 	while(!done){
 		char out_file_name[250];
@@ -46,6 +73,7 @@ main(int argc, char** argv){
 			window = num_original_samples - ind;
 			info.frames = num_original_samples - ind;
 			done = 1;
+			printf("%d\n", count);
 		}
 
 		memcpy(buffer, data + ind, window * sizeof(short));
@@ -56,6 +84,7 @@ main(int argc, char** argv){
 		sf_close(outfile);
 
 		ind += window;
+		count++;
 	}
 	sf_close(file);
 }
