@@ -25,10 +25,16 @@ main(int argc, char** argv){
 		execl("./normalize", "./normalize", argv[1], "./normed_audio.wav", (char*) NULL);
 	else
 		wait(NULL);
+	
+	n = fork();
+	if(n == 0)
+		execl("./downsample", "./downsample", "./normed_audio.wav", "./downsampled_audio.wav", (char*) NULL);
+	else
+		wait(NULL);
 
 	n = fork();
 	if(n == 0)
-		execl("./chunk", "./chunk", "./normed_audio.wav", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], (char*) NULL);
+		execl("./chunk", "./chunk", "./downsampled_audio.wav", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], (char*) NULL);
 	else
 		wait(NULL);
 	exit(0);
