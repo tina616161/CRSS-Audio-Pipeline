@@ -1,43 +1,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sndfile.h>
+#include <string.h>
+#include <math.h>
+
+/* typedef struct { */
+/* 	short* data; */
+/* 	long count; */
+/* } WaveData; */
 
 typedef struct {
 	double* data;
-	int count;
+	long count;
 } WaveData;
 
 WaveData
-peak_normalize(short* data, int arr_size, short max){
-	double* out = malloc(sizeof(double) * arr_size);
+peak_normalize(short* data, long arr_size, short max){
 	double factor = 1.0 / max;
+	double* out = malloc(sizeof(double) * arr_size);
 
-	for(int j = 0; j < arr_size; j++)
-		out[j] = (double)factor * data[j];
+	if(out == NULL){
+		printf("Malloc error. Not enough memory");
+		exit(-1);
+	}
+
+	for(long j = 0; j < arr_size; j++)
+		out[j] = (double) factor * data[j];
 
 	return (WaveData) {out, arr_size};
 }
 
 WaveData
-downsample(double* data, int arr_size, int original_sample_rate, int new_sample_rate){
+downsample(short* data, long arr_size, int original_sample_rate, int new_sample_rate){
+	printf("%ld\n", arr_size);
 	unsigned long long new_size;
 	double ratio, ind;
-	double* out;
-	int count;
+	short* out;
+	long count;
 	
 	new_size = (unsigned long long)arr_size * (unsigned long long)new_sample_rate / (unsigned long long)original_sample_rate;
 	ratio = original_sample_rate / new_sample_rate;
 	count = 0;
 	ind = 0;
 
-	out = malloc(sizeof(double) * new_size);
+	out = malloc(sizeof(short) * new_size);
+	if(out == NULL) printf("malloc error\n");
 
 	while(ind < arr_size){
-		if(!(ind == (int)ind))
-			out[count] = (data[(int)ind] + data[(int)ind + 1]) / 2;
+		if(!(ind == (long)ind))
+			out[count] = (short) (data[(long)ind] + data[(long)ind + 1]) / 2;
 		else
-			out[count] = data[(int)ind];
-
+			out[count] = (short) data[(long)ind];
 		ind += ratio;
 		count++;
 	}
@@ -61,12 +74,14 @@ main(int argc, char** argv){
 	short* data;
 	short max;
 
+
 	// read input file
 	file = sf_open(file_in_path, SFM_READ, &info);
 
 	// alloc space for array of samples
 	data = malloc(sizeof(short) * info.frames * info.channels);
 	max = 0;
+	long num_frames = info.frames;
 
 	printf("Reading...\n");
 	// read the data
@@ -76,31 +91,63 @@ main(int argc, char** argv){
 	}
 
 	// find max
-	for(int i = 0; i < info.frames; i++)
-		if(data[i] > max)
-			max = data[i];
+	for(long i = 0; i < info.frames; i++){
+		if(abs(data[i]) > max)
+			max = abs(data[i]);
+	}
 
-	printf("Normalizing...\n");
-	WaveData output = peak_normalize(data, info.frames, max);
-
-	printf("Downsampling...\n");
-	output = downsample(output.data, info.frames, info.samplerate, 8000);
-
-	info.samplerate = 8000;
-	info.frames = output.count;
-
-	// output path
+	int quarter_size = info.frames / 8;
+	long start_ind = 0;
+	long end_ind = start_ind + quarter_size;
 	SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info);
-	// write data to file
-	sf_write_double(outfile, output.data, output.count);
-	sf_write_sync(outfile);
 
-	// close file
+	/* Normalizing in chunks */
+	printf("Normalzing..\n");
+	while(start_ind < num_frames){
+		short* buff = malloc(sizeof(short) * quarter_size);
+		start_ind = end_ind + 1;
+		end_ind = start_ind + quarter_size;
+
+		if(start_ind + quarter_size > num_frames)
+			break;
+
+		memcpy(buff, data + start_ind, quarter_size);
+		WaveData normed_chunk = peak_normalize(data, quarter_size, max);
+
+		sf_write_double(outfile, normed_chunk.data, quarter_size);
+
+		free(normed_chunk.data);
+		free(buff);
+	}
+
 	sf_close(outfile);
 	sf_close(file);
+
+
+	/* printf("Normalizing...\n"); */
+	/* WaveData output = peak_normalize(data, info.frames, max); */
+
+	/* /\* printf("Downsampling...\n"); *\/ */
+	/* /\* output = downsample(output.data, info.frames, info.samplerate, 8000); *\/ */
+
+	/* /\* info.samplerate = 8000; *\/ */
+	/* info.frames = output.count; */
+	/* info.channels = 1; */
+
+	/* // output path */
+	/* SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info); */
+	/* // write data to file */
+	/* if(sf_writef_short(outfile, output.data, output.count) != info.frames){ */
+	/* 	printf("Write error.\n"); */
+	/* } */
+	/* sf_write_sync(outfile); */
+
+	/* // close file */
+	/* sf_close(outfile); */
+	/* sf_close(file); */
 	// free data array
 	free(data);
 
-	printf("Done\n");
+	printf("Finished normalizing.\n");
 	return 0;
 }
