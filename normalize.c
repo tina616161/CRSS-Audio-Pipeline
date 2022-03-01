@@ -64,26 +64,41 @@ main(int argc, char** argv){
 			max = abs(data[i]);
 	}
 
-	int quarter_size = info.frames / 8;
+	int buffer_size = info.frames / 8;
 	long start_ind = 0;
-	long end_ind = start_ind + quarter_size;
+	long end_ind = start_ind + buffer_size;
 	SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info);
+	int not_finished = 0;
 
 	/* Normalizing in chunks */
-	printf("Normalzing..\n");
+	printf("Normalizng..\n");
 	while(start_ind < num_frames){
-		short* buff = malloc(sizeof(short) * quarter_size);
-		start_ind = end_ind + 1;
-		end_ind = start_ind + quarter_size;
+		short* buff = malloc(sizeof(short) * buffer_size);
 
-		if(start_ind + quarter_size > num_frames)
+		if(end_ind + 1 > num_frames){
+			not_finished = 1;
 			break;
+		}
+		else
+			start_ind = end_ind + 1;
 
-		memcpy(buff, data + start_ind, quarter_size);
-		WaveData normed_chunk = peak_normalize(data, quarter_size, max);
+		end_ind = start_ind + buffer_size;
+		memcpy(buff, data + start_ind, buffer_size);
+		WaveData normed_chunk = peak_normalize(data, buffer_size, max);
 
-		sf_write_double(outfile, normed_chunk.data, quarter_size);
+		sf_write_double(outfile, normed_chunk.data, buffer_size);
+		free(normed_chunk.data);
+		free(buff);
+	}
 
+	/* if there's more samples, read the rest of them and finish normalizing 
+	 * this isn't the best way to do this, change it later */
+	if(not_finished){
+		long frames_left = num_frames - start_ind - 1;
+		short* buff = malloc(sizeof(short) * frames_left);
+		memcpy(buff, data + start_ind, frames_left);
+		WaveData normed_chunk = peak_normalize(data, frames_left, max);
+		sf_write_double(outfile, normed_chunk.data, frames_left);
 		free(normed_chunk.data);
 		free(buff);
 	}

@@ -25,12 +25,25 @@ downsample(short* data, long arr_size, int original_sample_rate, int new_sample_
 	if(out == NULL) printf("malloc error\n");
 
 	while(ind < arr_size){
-		if(!(ind == (long)ind))
-			out[count] = (short) (data[(long)ind] + data[(long)ind + 1]) / 2;
-		else
-			out[count] = (short) data[(long)ind];
-		ind += ratio;
+		int counter = 0;
+		short val = 0;
+		while(counter < ratio){
+			val += data[(long)ind];
+			counter++;
+			ind++;
+		}
+
+		val += data[(long)ind + 1];
+		val = (short)val / ratio;
+		out[count] = val;
 		count++;
+
+		/* if(!(ind == (long)ind)) */
+		/* 	out[count] = (short) (data[(long)ind] + data[(long)ind + 1]) / 2; */
+		/* else */
+		/* 	out[count] = (short) data[(long)ind]; */
+		/* ind += ratio; */
+		/* count++; */
 	}
 
 	return (WaveData) {out, new_size};
@@ -40,7 +53,7 @@ int
 main(int argc, char** argv){
 	if(argc < 3){
 		printf("ERROR: Not enough arguments\n");
-		printf("Usage: normalize [input file path] [output file path]\n");
+		printf("Usage: downsample [input file path] [output file path]\n");
 		exit(1);
 	}
 
