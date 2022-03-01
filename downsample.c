@@ -33,17 +33,11 @@ downsample(short* data, long arr_size, int original_sample_rate, int new_sample_
 			ind++;
 		}
 
-		val += data[(long)ind + 1];
+		if(counter != ratio)
+			val += data[(long)ind + 1] / 2;
 		val = (short)val / ratio;
 		out[count] = val;
 		count++;
-
-		/* if(!(ind == (long)ind)) */
-		/* 	out[count] = (short) (data[(long)ind] + data[(long)ind + 1]) / 2; */
-		/* else */
-		/* 	out[count] = (short) data[(long)ind]; */
-		/* ind += ratio; */
-		/* count++; */
 	}
 
 	return (WaveData) {out, new_size};
@@ -77,8 +71,6 @@ main(int argc, char** argv){
 		printf("Couldn't read file.");
 		exit(-1);
 	}
-
-	/* printf("Normalizing...\n"); */
 
 	printf("Downsampling...\n");
 	WaveData output = downsample(data, info.frames, info.samplerate, 8000);
