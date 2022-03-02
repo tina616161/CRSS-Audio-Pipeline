@@ -57,15 +57,24 @@ main(int argc, char** argv){
 		printf("Couldn't read file.");
 		exit(-1);
 	}
+    int threeminmark = 3*60*info.samplerate;
+    long peak_index = -1;
+    short peak_value = -1;
 
 	// find max
 	for(long i = 0; i < info.frames; i++){
-		if(abs(data[i]) > max)
+        if(i < threeminmark && data[i]>400) //make sure we get greatest peak value
+           { peak_value = data[i];
+            peak_index = i;
+        }
+		else if(abs(data[i]) > max)
 			max = abs(data[i]);
 	}
 
+    //trim it first 0-peak_index 
+
 	int buffer_size = info.frames / 8;
-	long start_ind = 0;
+	long start_ind = peak_index + 1;
 	long end_ind = start_ind + buffer_size;
 	SNDFILE* outfile = sf_open(file_out_path, SFM_WRITE, &info);
 	int not_finished = 0;
