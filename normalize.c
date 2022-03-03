@@ -57,13 +57,13 @@ main(int argc, char** argv){
 		printf("Couldn't read file.");
 		exit(-1);
 	}
-    int threeminmark = 3*60*info.samplerate;
+    int threeminmark = 5*60*info.samplerate;
     long peak_index = -1;
     short peak_value = -1;
 
 	// find max
 	for(long i = 0; i < info.frames; i++){
-        if(i < threeminmark && data[i]>400) //make sure we get greatest peak value
+        if(i < threeminmark && data[i]>1000) //make sure we get greatest peak value
            { peak_value = data[i];
             peak_index = i;
         }
